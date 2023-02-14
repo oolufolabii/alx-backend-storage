@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-'''Task 11's module.
+'''Python function that returns the list of
+school having a specific topic
 '''
 
 
