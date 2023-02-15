@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
-'''Python script that provides some stats about Nginx logs
-stored in MongoDB.
-'''
+"""Defines a function that  provides some stats
+   about Nginx logs stored in MongoDB
+"""
 
 from pymongo import MongoClient
 
 
-def print_nginx_request_logs(nginx_collection):
-    '''Prints stats about Nginx request logs.
-    '''
+def nginx_stats_check():
+    """ provides some stats about Nginx logs stored in MongoDB:"""
     client = MongoClient()
     collec_nginx = client.logs.nginx
 
@@ -22,6 +21,28 @@ def print_nginx_request_logs(nginx_collection):
     status = collec_nginx.count_documents({"method": "GET", "path": "/status"})
     print("{} status check".format(status))
 
+    print("IPs:")
 
-if __name__ == '__main__':
-    print_nginx_request_logs
+    top_IPs = collec_nginx.aggregate([
+        {"$group":
+         {
+             "_id": "$ip",
+             "count": {"$sum": 1}
+         }
+         },
+        {"$sort": {"count": -1}},
+        {"$limit": 10},
+        {"$project": {
+            "_id": 0,
+            "ip": "$_id",
+            "count": 1
+        }}
+    ])
+    for top_ip in top_IPs:
+        count = top_ip.get("count")
+        ip_address = top_ip.get("ip")
+        print("\t{}: {}".format(ip_address, count))
+
+
+if __name__ == "__main__":
+    nginx_stats_check()
